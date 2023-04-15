@@ -455,6 +455,34 @@ class _ConnectingLinesPainter extends CustomPainter {
     late double connectionStart;
     late double Function(int level) calculateOffset;
 
+    final Paint dashedStyleVerticle = guide.createPaint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = guide.createPaint().strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = const LinearGradient(
+              colors: [Color(0xFFD0D0D0), Colors.transparent],
+              stops: [0.5, 0.5],
+              tileMode: TileMode.repeated,
+              transform: GradientRotation(3.14 / 2))
+          .createShader(const Rect.fromLTWH(0, 0, 10, 10))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final Paint dashedStyleHorizontal = guide.createPaint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = guide.createPaint().strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = const LinearGradient(
+              colors: [Color(0xFFD0D0D0), Colors.transparent],
+              stops: [0.5, 0.5],
+              tileMode: TileMode.repeated,
+              transform: GradientRotation(0))
+          .createShader(const Rect.fromLTWH(0, 0, 10, 10))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
     if (textDirection == TextDirection.rtl) {
       connectionEnd = size.width - indentation;
       connectionStart = connectionEnd + guide.originOffset;
@@ -466,6 +494,7 @@ class _ConnectingLinesPainter extends CustomPainter {
     }
 
     final Path path = Path();
+    final Path horizontalPath = Path();
 
     // Add vertical lines
     runForEachAncestorLevelThatHasNextSibling((int level) {
@@ -476,28 +505,30 @@ class _ConnectingLinesPainter extends CustomPainter {
     });
 
     // Add connection
-
     final double y = size.height * 0.5;
-
     path.moveTo(connectionStart, 0.0);
+    horizontalPath.moveTo(connectionStart, 0.0);
 
     if (guide.roundCorners) {
       path.quadraticBezierTo(connectionStart, y, connectionEnd, y);
+      horizontalPath.quadraticBezierTo(connectionStart, y, connectionEnd, y);
     } else {
       // if [entry] has a sibling after it, a full vertical line was
       // painted at [entry.level] and we only need to move to the start
       // of the horizontal line, otherwise add half of a vertical line
       // to connect to the horizontal one.
       if (entry.hasNextSibling) {
-        path.moveTo(connectionStart, y);
+        horizontalPath.moveTo(connectionStart, y);
       } else {
         path.lineTo(connectionStart, y);
+        horizontalPath.moveTo(connectionStart, y);
       }
 
-      path.lineTo(connectionEnd, y);
+      horizontalPath.lineTo(connectionEnd, y);
     }
 
-    canvas.drawPath(path, guide.createPaint());
+    canvas.drawPath(path, dashedStyleVerticle);
+    canvas.drawPath(horizontalPath, dashedStyleHorizontal);
   }
 
   @override
